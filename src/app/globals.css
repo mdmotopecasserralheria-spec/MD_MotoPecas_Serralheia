@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand: #f97316;
+    --brand-dark: #ea580c;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-dark-900 text-gray-100 font-sans antialiased;
+  }
+
+  ::selection {
+    @apply bg-brand-500 text-white;
+  }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-dark-900;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-dark-800; }
+  ::-webkit-scrollbar-thumb { @apply bg-brand-500 rounded-full; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply border-2 border-brand-500 text-brand-500 hover:bg-brand-500 hover:text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 flex items-center gap-2;
+  }
+
+  .card {
+    @apply bg-white dark:bg-dark-800 rounded-2xl border border-gray-100 dark:border-dark-600 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  .section {
+    @apply py-16 md:py-24 px-4 mx-auto;
+    max-width: min(88vw, 1600px);
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-500 bg-white dark:bg-dark-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent;
+  }
+
+  .whatsapp-float {
+    @apply fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-2xl shadow-green-500/40 transition-all hover:scale-110 cursor-pointer;
+  }
+}
+
+/* Chat widget — Isis-inspired redesign */
+.chat-bubble-bot {
+  @apply bg-dark-700 border border-dark-500 text-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 text-sm shadow-sm;
+  max-width: min(80%, 480px);
+}
+.chat-bubble-user {
+  @apply bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm shadow-sm;
+  max-width: min(80%, 480px);
+}
+
+/* Typing dots — brand color + bounce */
+.typing-dot {
+  @apply w-2 h-2 bg-brand-400 rounded-full animate-bounce;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.30s; }
+
+/* Chat scrollbar */
+.chat-scroll::-webkit-scrollbar { width: 4px; }
+.chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll::-webkit-scrollbar-thumb { @apply bg-dark-500 rounded-full; }
