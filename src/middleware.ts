@@ -25,7 +25,7 @@ export async function middleware(req: NextRequest) {
       `manifest-src 'self'`,
       `img-src 'self' data: blob: https:`,
       `font-src 'self'`,
-      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.groq.com`,
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.groq.com https://www.google-analytics.com https://www.google.com https://analytics.google.com`,
       `frame-ancestors 'none'`,
       `base-uri 'self'`,
       `form-action 'self'`,
