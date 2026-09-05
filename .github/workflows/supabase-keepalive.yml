@@ -46,10 +46,14 @@ jobs:
 
       - name: Ping /api/ping (mantém Supabase ativo)
         run: |
-          # Domínio customizado (se estiver conectado à Vercel)
-          PRIMARY="https://mdmotopecas.com.br/api/ping"
-          # Subdomínio da Vercel (onde o endpoint está deployado atualmente)
-          FALLBACK="https://md-moto-pecas-serralheia.vercel.app/api/ping"
+          # Desabilita "-e" para não abortar o script se um curl falhar
+          # (ex: domínio customizado ainda não conectado retorna exit 6)
+          set +e
+
+          # Subdomínio da Vercel (onde o endpoint está deployado e funcional)
+          PRIMARY="https://md-moto-pecas-serralheia.vercel.app/api/ping"
+          # Domínio customizado (quando estiver conectado à Vercel)
+          FALLBACK="https://mdmotopecas.com.br/api/ping"
           KEY="${{ secrets.PING_KEY }}"
 
           for URL in "$PRIMARY" "$FALLBACK"; do
@@ -62,19 +66,18 @@ jobs:
               "${URL}")
 
             echo "Status HTTP: ${HTTP_CODE}"
+            echo "Resposta:"
             cat /tmp/ping-response.json
             echo ""
             echo ""
 
             if [ "${HTTP_CODE}" = "200" ]; then
-              echo "✅ Supabase mantido ativo — ping bem-sucedido"
+              echo "✅ Supabase mantido ativo — ping bem-sucedido em ${URL}"
               exit 0
             fi
 
-            # 401 = precisa da chave PING_KEY (configurada na Vercel mas ausente no GitHub)
             if [ "${HTTP_CODE}" = "401" ]; then
-              echo "⚠️  Endpoint exige PING_KEY. Configure o secret PING_KEY no GitHub (mesmo valor da Vercel)."
-              continue
+              echo "⚠️  Endpoint exige PING_KEY (configurada na Vercel mas ausente/incorreta no GitHub)."
             fi
           done
 
