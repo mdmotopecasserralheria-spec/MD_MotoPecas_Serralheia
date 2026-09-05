@@ -46,23 +46,37 @@ jobs:
 
       - name: Ping /api/ping (mantém Supabase ativo)
         run: |
-          URL="https://mdmotopecas.com.br/api/ping"
+          # Domínio customizado (se estiver conectado à Vercel)
+          PRIMARY="https://mdmotopecas.com.br/api/ping"
+          # Subdomínio da Vercel (onde o endpoint está deployado atualmente)
+          FALLBACK="https://md-moto-pecas-serralheia.vercel.app/api/ping"
           KEY="${{ secrets.PING_KEY }}"
 
-          # Faz o request com timeout de 30s
-          HTTP_CODE=$(curl -s -o /tmp/ping-response.json -w "%{http_code}" \
-            --max-time 30 \
-            -H "x-ping-key: ${KEY}" \
-            "${URL}")
+          for URL in "$PRIMARY" "$FALLBACK"; do
+            echo "Tentando: ${URL}"
 
-          echo "Status HTTP: ${HTTP_CODE}"
-          cat /tmp/ping-response.json
-          echo ""
+            HTTP_CODE=$(curl -s -o /tmp/ping-response.json -w "%{http_code}" \
+              --max-time 30 \
+              -H "Content-Type: application/json" \
+              ${KEY:+ -H "x-ping-key: ${KEY}"} \
+              "${URL}")
 
-          if [ "${HTTP_CODE}" = "200" ]; then
-            echo "✅ Supabase mantido ativo — ping bem-sucedido"
-          else
-            echo "⚠️  Ping retornou status ${HTTP_CODE}"
-            # Não falha a ação para não gerar notificações excessivas
-            # em caso de manutenção pontual do Supabase
-          fi
+            echo "Status HTTP: ${HTTP_CODE}"
+            cat /tmp/ping-response.json
+            echo ""
+            echo ""
+
+            if [ "${HTTP_CODE}" = "200" ]; then
+              echo "✅ Supabase mantido ativo — ping bem-sucedido"
+              exit 0
+            fi
+
+            # 401 = precisa da chave PING_KEY (configurada na Vercel mas ausente no GitHub)
+            if [ "${HTTP_CODE}" = "401" ]; then
+              echo "⚠️  Endpoint exige PING_KEY. Configure o secret PING_KEY no GitHub (mesmo valor da Vercel)."
+              continue
+            fi
+          done
+
+          echo "Nenhuma URL respondeu com 200. Verifique dominio e deployment."
+          exit 0  # Não falha a ação para não gerar notificações excessivas
