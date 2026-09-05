@@ -1,0 +1,68 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# GitHub Actions — Supabase Keep-Alive (MP Uptime)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Mantém o projeto Supabase ativo, evitando o pause automático do plano
+# gratuito (Hobby) após 7 dias de inatividade.
+#
+# Como funciona:
+#   1. A cada 5 minutos, este workflow dispara um request HTTP para
+#      https://mdmotopecas.com.br/api/ping
+#   2. O endpoint /api/ping faz uma query leve no Supabase (count HEAD)
+#   3. Qualquer acesso ao banco conta como "atividade" e reinicia o timer
+#      de pausa do projeto.
+#
+# Configuração necessária (1 vez apenas):
+#   1. No repositório GitHub → Settings → Secrets and variables → Actions
+#      → New repository secret:
+#        - PING_KEY = <string aleatória, ex: "supabase-keepalive-2024">
+#   2. Na Vercel → Project Settings → Environment Variables:
+#        - PING_KEY = <mesma string do passo 1>
+#   3. Faça commit deste arquivo (já está incluído)
+#
+# Alternativa sem GitHub Actions: configure um monitor HTTP no
+# https://uptimerobot.com → URL: https://mdmotopecas.com.br/api/ping
+# com o mesmo header x-ping-key.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Cron: a cada 5 minutos (granularidade mínima do GitHub Actions)
+    # Timezone: UTC
+    - cron: '*/5 * * * *'
+  workflow_dispatch:  # Permite disparar manualmente pelo painel do GitHub
+  # push:
+  #   branches: [main]  # Descomente para testar manualmente via push
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    name: Supabase Keep-Alive Ping
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Ping /api/ping (mantém Supabase ativo)
+        run: |
+          URL="https://mdmotopecas.com.br/api/ping"
+          KEY="${{ secrets.PING_KEY }}"
+
+          # Faz o request com timeout de 30s
+          HTTP_CODE=$(curl -s -o /tmp/ping-response.json -w "%{http_code}" \
+            --max-time 30 \
+            -H "x-ping-key: ${KEY}" \
+            "${URL}")
+
+          echo "Status HTTP: ${HTTP_CODE}"
+          cat /tmp/ping-response.json
+          echo ""
+
+          if [ "${HTTP_CODE}" = "200" ]; then
+            echo "✅ Supabase mantido ativo — ping bem-sucedido"
+          else
+            echo "⚠️  Ping retornou status ${HTTP_CODE}"
+            # Não falha a ação para não gerar notificações excessivas
+            # em caso de manutenção pontual do Supabase
+          fi

@@ -5,6 +5,12 @@ function isApiRoute(pathname: string): boolean {
   return pathname.startsWith('/api/')
 }
 
+// Rotas internas de health-check — exime do rate-limiting
+// (usadas por serviços de monitoramento externo, ex: GitHub Actions cron)
+function isKeepAliveRoute(pathname: string): boolean {
+  return pathname === '/api/ping'
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   const res = NextResponse.next()
@@ -56,7 +62,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // Rate limiting for API routes (extracted to lib/rate-limit.ts)
-  if (isApiRoute(pathname)) {
+  // Keep-alive routes (ex: /api/ping) are exempt to avoid blocking
+  // automated monitors like GitHub Actions or UptimeRobot.
+  if (isApiRoute(pathname) && !isKeepAliveRoute(pathname)) {
     const ip = getClientIp(req)
     const result = await checkRateLimit(ip)
 

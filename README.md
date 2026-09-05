@@ -27,6 +27,7 @@ md-moto-pecas/
 │   │   ├── contato/page.tsx      → Contato e localização
 │   │   ├── dashboard/page.tsx    → Painel do cliente
 │   │   ├── api/
+│   │   │   ├── ping/route.ts    → Keep-alive (evita pause do Supabase)
 │   │   │   ├── chat/route.ts     → Orquestrador + agentes IA
 │   │   │   ├── anuncios/route.ts → CRUD de anúncios
 │   │   │   └── auth/route.ts     → Auth do dashboard
@@ -38,10 +39,14 @@ md-moto-pecas/
 │   │   └── ui/WhatsAppFloat.tsx  → Botão WhatsApp
 │   └── lib/
 │       ├── agentes.ts            → Orquestrador + 4 agentes IA
+│       ├── rate-limit.ts         → Rate limiter (in-memory)
 │       └── supabase.ts           → Client Supabase
 ├── supabase-schema.sql           → Execute no Supabase primeiro!
 ├── vercel.json                   → Config deploy
-└── .env.local.example            → Variáveis de ambiente
+├── .env.local.example            → Variáveis de ambiente
+└── .github/
+    └── workflows/
+        └── supabase-keepalive.yml → Cron job keep-alive (GitHub Actions)
 ```
 
 ---
@@ -76,6 +81,7 @@ DASHBOARD_SECRET=senha_do_cliente_aqui
 NEXT_PUBLIC_WHATSAPP_PECAS=5562999999999
 NEXT_PUBLIC_WHATSAPP_SERRALHERIA=5562999999998
 NEXT_PUBLIC_EMPRESA_CIDADE=Santa Tereza de Goiás
+PING_KEY=super-secreto-keepalive-2024  # Opcional — protege /api/ping
 ```
 
 ### 4. Instalar e rodar
@@ -143,8 +149,64 @@ Funcionalidades:
 
 ---
 
+## 🌙 MP Uptime — Keep-Alive do Supabase
+
+O plano gratuito do Supabase (**Hobby**) pausa o projeto após **7 dias de inatividade**. Quando pausado, sua aplicação não consegue conectar ao banco de dados.
+
+Este projeto inclui um sistema automatizado de **keep-alive** que faz ping no Supabase a cada 5 minutos, mantendo o projeto sempre ativo.
+
+### Como funciona
+
+| Peça | Função |
+|------|--------|
+| **`GET /api/ping`** | Endpoint Next.js que faz uma query leve (`count HEAD`) no Supabase |
+| **GitHub Actions cron** | Workflow que dispara o ping a cada 5 minutos (grátis) |
+| **Middleware exemption** | `/api/ping` é ignorado pelo rate-limiting |
+
+### Configuração (1 vez apenas)
+
+#### 1. GitHub Secret
+
+No repositório GitHub → **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Nome | Valor |
+|------|-------|
+| `PING_KEY` | Uma string aleatória, ex: `supabase-keepalive-2024` |
+
+> 💡 Se não quiser usar autenticação, deixe o `PING_KEY` em branco (o endpoint aceitará todos os requests). Recomendado apenas para desenvolvimento.
+
+#### 2. Vercel Environment Variable
+
+No painel da Vercel → **Project Settings → Environment Variables**:
+
+| Nome | Valor | Environment |
+|------|-------|-------------|
+| `PING_KEY` | Mesma string do passo 1 | Production & Preview |
+
+#### 3. Deploy
+
+Faça commit e push — o workflow do GitHub Actions será ativado automaticamente:
+
+```bash
+git add .
+git commit -m "feat: MP Uptime keep-alive do Supabase"
+git push
+```
+
+### Alternativa: UptimeRobot
+
+Se preferir não usar GitHub Actions, configure um monitor HTTP no [UptimeRobot](https://uptimerobot.com):
+
+- **URL:** `https://mdmotopecas.com.br/api/ping`
+- **Method:** GET
+- **Interval:** 5 minutos
+- **Header:** `x-ping-key: <sua-valor-PING_KEY>` (se configurado)
+
+---
+
 ## 📞 Próximos passos sugeridos
 
+- [x] Configurar MP Uptime (keep-alive do Supabase)
 - [ ] Conectar Google Maps real na página de contato
 - [ ] Adicionar Google Analytics 4
 - [ ] Registrar domínio `mdmotopecas.com.br`
