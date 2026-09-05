@@ -19,6 +19,16 @@ function getGroq(): Groq {
 export type Empresa = 'pecas' | 'serralheria' | 'geral'
 export type Agente = 'pecas' | 'serralheria' | 'geral' | 'vendas'
 
+// ─── Modelo Groq (configurável, com fallback) ──────────
+// O modelo antigo 'llama-3.3-70b-versatile' deixou de estar disponível
+// no plano Developer/Grátis (virou apenas "Enterprise"). Para o chat não
+// estourar em 500, usamos um modelo acessível no plano gratuita.
+// Configure GROQ_MODEL no ambiente caso queira trocar o modelo.
+const MODELO_PADRAO = 'openai/gpt-oss-20b'
+function getModelo(): string {
+  return process.env.GROQ_MODEL || MODELO_PADRAO
+}
+
 export interface MensagemChat {
   role: 'user' | 'assistant'
   content: string
@@ -44,7 +54,7 @@ Mensagem: "${mensagem}"
 Responda SOMENTE com JSON válido, sem texto adicional. Exemplo: {"agente":"pecas","empresa":"pecas"}`
 
   const res = await getGroq().chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
+    model: getModelo(),
     temperature: 0.1,
     max_tokens: 60,
     messages: [{ role: 'user', content: prompt }],
@@ -136,7 +146,7 @@ export async function responderAgente(
   ]
 
   const res = await getGroq().chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
+    model: getModelo(),
     temperature: 0.5,
     max_tokens: 300,
     messages,

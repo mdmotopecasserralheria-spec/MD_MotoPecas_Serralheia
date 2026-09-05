@@ -40,12 +40,21 @@ export async function POST(req: NextRequest) {
       empresa,
     })
   } catch (err: any) {
-    // Diagnóstico: diferenciar chave ausente de demais erros
+    // Diagnóstico: diferenciar causas comuns para facilitar o debugging
     const msg = err?.message || String(err)
-    const semChave = msg?.includes('x_key_missing') || /GROQ_API_KEY|apiKey|401|authentication/i.test(String(msg))
-    console.error('[CHAT ERROR]', msg, { stack: err?.stack })
+    const body = err?.status || ''
+    const texto = `${msg} ${body}`
+    const semChave = /x_key_missing|GROQ_API_KEY|apiKey|401|authentication/i.test(texto)
+    const modeloInvalido = /model|not found|400|404|does not exist|unavailable/i.test(texto)
+    console.error('[CHAT ERROR]', texto, { stack: err?.stack })
     return NextResponse.json(
-      { error: semChave ? 'Chave do Groq não configurada.' : 'Erro ao processar. Tente novamente.' },
+      {
+        error: semChave
+          ? 'Chave do Groq não configurada.'
+          : modeloInvalido
+            ? 'Modelo do Groq indisponível/configurar GROQ_MODEL.'
+            : 'Erro ao processar. Tente novamente.',
+      },
       { status: semChave ? 503 : 500 }
     )
   }
