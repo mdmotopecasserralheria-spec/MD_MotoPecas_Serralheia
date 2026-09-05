@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { ArrowRight, CheckCircle } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -32,7 +32,7 @@ const diferenciais = [
   'Pintura anticorrosiva padrão',
 ]
 
-const wp = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562991444852'
+const wp = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562992458972'
 
 export default function SerralheriaPage() {
   return (

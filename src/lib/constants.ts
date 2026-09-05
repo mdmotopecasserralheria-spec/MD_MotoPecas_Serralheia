@@ -1,4 +1,4 @@
-export const STATUS = ['pendente', 'aprovado', 'rejeitado'] as const
+﻿export const STATUS = ['pendente', 'aprovado', 'rejeitado'] as const
 export type Status = (typeof STATUS)[number]
 
 export const EMPRESAS = ['pecas', 'serralheria'] as const
@@ -23,7 +23,7 @@ export const STATUS_STYLE: Record<Status, { bg: string; text: string; label: str
 }
 
 export const WHATSAPP_PECAS = process.env.NEXT_PUBLIC_WHATSAPP_PECAS || '5562992458972'
-export const WHATSAPP_SERRALHERIA = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562991444852'
+export const WHATSAPP_SERRALHERIA = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562992458972'
 export const CIDADE = process.env.NEXT_PUBLIC_EMPRESA_CIDADE || 'Santa Tereza de Goiás'
 
 export const GRADIENT_DARK = 'linear-gradient(135deg, #0a1628, #1a3a8f)'

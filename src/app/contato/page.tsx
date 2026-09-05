@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { MapPin, Clock, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export const revalidate = 3600
 
 const cidade = process.env.NEXT_PUBLIC_EMPRESA_CIDADE || 'Santa Tereza de Goiás'
 const wp = process.env.NEXT_PUBLIC_WHATSAPP_PECAS || '5562992458972'
-const wpSerr = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562991444852'
+const wpSerr = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562992458972'
 
 export default function ContatoPage() {
   return (

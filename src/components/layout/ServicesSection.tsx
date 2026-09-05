@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
 const services = [
@@ -19,7 +19,7 @@ const services = [
     items: ['Portões automáticos', 'Grades de proteção', 'Escadas e corrimãos', 'Estruturas metálicas', 'Fechamentos', 'Reforma e manutenção'],
     cta: 'Ver portfólio',
     href: '/serralheria',
-    wp: process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562991444852',
+    wp: process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562992458972',
     wpMsg: 'Olá! Gostaria de um orçamento de serralheria.',
   },
 ]

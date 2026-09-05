@@ -1,9 +1,9 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Clock, Phone, Mail, ArrowUpRight } from 'lucide-react'
 
 const WP_MD    = process.env.NEXT_PUBLIC_WHATSAPP_PECAS || '5562992458972'
-const WP_SOUZA = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562991444852'
+const WP_SOUZA = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562992458972'
 
 export function Footer() {
   const cidade = process.env.NEXT_PUBLIC_EMPRESA_CIDADE || 'Santa Tereza de Goiás'

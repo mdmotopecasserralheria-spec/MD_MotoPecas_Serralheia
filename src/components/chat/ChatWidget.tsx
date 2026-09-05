@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { MessageCircle, X, Send, Loader2, Minimize2, Maximize2, MessageCircleMore } from 'lucide-react'
@@ -43,7 +43,7 @@ export function ChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const wpPecas = process.env.NEXT_PUBLIC_WHATSAPP_PECAS || '5562992458972'
-  const wpSerralheria = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562991444852'
+  const wpSerralheria = process.env.NEXT_PUBLIC_WHATSAPP_SERRALHERIA || '5562992458972'
 
   const wp = useMemo(() => empresa === 'serralheria' ? wpSerralheria : wpPecas, [empresa])
 
