@@ -1,6 +1,19 @@
 import Groq from 'groq-sdk'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+// ─── Client Groq (lazy + defensivo) ────────────────────
+// O SDK lança erro se GROQ_API_KEY estiver ausente. Como este módulo é
+// importado pelas rotas de /api/chat, um erro no topo derrubaria todo o endpoint.
+// Por isso instanciamos apenas quando necessário e validamos a chave antes.
+let _groq: Groq | null = null
+
+function getGroq(): Groq {
+  if (_groq) return _groq
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error('x_key_missing')
+  }
+  _groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+  return _groq
+}
 
 // ─── Tipos ───────────────────────────────────────────────
 export type Empresa = 'pecas' | 'serralheria' | 'geral'
@@ -30,7 +43,7 @@ Mensagem: "${mensagem}"
 
 Responda SOMENTE com JSON válido, sem texto adicional. Exemplo: {"agente":"pecas","empresa":"pecas"}`
 
-  const res = await groq.chat.completions.create({
+  const res = await getGroq().chat.completions.create({
     model: 'llama-3.3-70b-versatile',
     temperature: 0.1,
     max_tokens: 60,
@@ -117,7 +130,7 @@ export async function responderAgente(
     { role: 'user' as const, content: mensagem },
   ]
 
-  const res = await groq.chat.completions.create({
+  const res = await getGroq().chat.completions.create({
     model: 'llama-3.3-70b-versatile',
     temperature: 0.5,
     max_tokens: 300,

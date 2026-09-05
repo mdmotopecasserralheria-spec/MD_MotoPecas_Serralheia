@@ -39,11 +39,14 @@ export async function POST(req: NextRequest) {
       agente,
       empresa,
     })
-  } catch (err) {
-    console.error('[CHAT ERROR]', err)
+  } catch (err: any) {
+    // Diagnóstico: diferenciar chave ausente de demais erros
+    const msg = err?.message || String(err)
+    const semChave = msg?.includes('x_key_missing') || /GROQ_API_KEY|apiKey|401|authentication/i.test(String(msg))
+    console.error('[CHAT ERROR]', msg, { stack: err?.stack })
     return NextResponse.json(
-      { error: 'Erro ao processar. Tente novamente.' },
-      { status: 500 }
+      { error: semChave ? 'Chave do Groq não configurada.' : 'Erro ao processar. Tente novamente.' },
+      { status: semChave ? 503 : 500 }
     )
   }
 }
