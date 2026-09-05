@@ -126,7 +126,12 @@ export async function responderAgente(
 ): Promise<string> {
   const messages = [
     { role: 'system' as const, content: SYSTEMS[agente] },
-    ...historico.slice(-8).map(m => ({ role: m.role, content: m.content })),
+    // Filtra mensagens com conteúdo vazio (evita rejeição da API do Groq
+    // quando uma resposta anterior veio em branco no histórico)
+    ...historico
+      .slice(-8)
+      .filter(m => m && m.content && m.content.trim().length > 0)
+      .map(m => ({ role: m.role, content: m.content })),
     { role: 'user' as const, content: mensagem },
   ]
 
