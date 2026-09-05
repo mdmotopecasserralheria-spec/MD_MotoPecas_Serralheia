@@ -6,17 +6,16 @@ import { createServerClient } from '@/lib/supabase'
 // Endpoint de keep-alive que mantém o projeto Supabase ativo, evitando o
 // pause automático do plano gratuito (Hobby) após 7 dias de inatividade.
 //
-// Faz uma query leve (contagem via HEAD) que obriga o PostgreSQL a responder,
-// registrando "atividade" no projeto e reiniciando o timer de pausa.
+// Estratégia: faz uma query real e leve (contagem via HEAD) que obriga o
+// PostgreSQL a responder, registrando "atividade" e reiniciando o timer de
+// pausa. Também valida que as credenciais estão configuradas.
 //
-// Segurança: se a variável PING_KEY estiver definida, o endpoint exige o
-// header x-ping-key com o mesmo valor. Isso impede que terceiros usem seu
-// endpoint gratuitamente.
+// Segurança: se a variável PING_KEY estiver definida na Vercel, o endpoint
+// exige o header x-ping-key com o mesmo valor. Isso impede uso indevido.
 //
-// Rotas de monitoramento sugeridas (gratuito):
-//   - GitHub Actions cron        → .github/workflows/supabase-keepalive.yml
-//   - UptimeRobot                → monitor HTTP apontando para este endpoint
-//   - cron-job.org               → job HTTP com header x-ping-key
+// Rotas de monitoramento (múltipla redundância):
+//   - GitHub Actions cron (este workflow) → a cada 5 min
+//   - UptimeRobot / cron-job.org          → monitores HTTP externos
 //
 // Frequência mínima recomendada: a cada 5 minutos
 export async function GET(req: NextRequest) {
@@ -29,24 +28,51 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Diagnóstico de configuração (mais comum para 500)
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !key) {
+    console.error('[PING] Credenciais Supabase ausentes na Vercel:',
+      { url: url ? 'definida' : 'AUSENTE', key: key ? 'definida' : 'AUSENTE' })
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'Credenciais Supabase não configuradas na Vercel',
+        configurado: false,
+        ts: new Date().toISOString(),
+      },
+      { status: 500 },
+    )
+  }
+
   try {
     const sb = createServerClient()
 
-    // Query ultra-leve: conta linhas sem transferir dados (HEAD no PostgREST)
-    // Qualquer conexão com o DB conta como atividade e evita o pause.
+    // Query leve: conta linhas sem transferir dados (HEAD no PostgREST).
+    // NÃO usa tabelas que possam não existir — usa 'anuncios' (base do projeto).
     const { count, error } = await sb
       .from('anuncios')
       .select('*', { count: 'exact', head: true })
 
     if (error) {
-      console.error('[PING] Supabase query error:', JSON.stringify(error, null, 2))
+      console.error('[PING] Supabase query error:', JSON.stringify(error))
+      // Se a tabela não existir, tenta query genérica de healthcheck via rpc
+      if ((error as any)?.code === '42P01' || /relation|does not exist/i.test(error.message || '')) {
+        const { error: rpcErr } = await sb.rpc('healthcheck')
+        if (!rpcErr) {
+          return NextResponse.json(
+            { ok: true, via: 'rpc-healthcheck', ts: new Date().toISOString(), message: 'Supabase ativo ✅' },
+            { status: 200 },
+          )
+        }
+      }
       return NextResponse.json(
         {
           ok: false,
           error: error.message || 'erro desconhecido no Supabase',
           code: (error as any)?.code ?? null,
           details: (error as any)?.details ?? null,
-          hint: (error as any)?.hint ?? null,
           ts: new Date().toISOString(),
         },
         { status: 500 },
@@ -57,15 +83,16 @@ export async function GET(req: NextRequest) {
       {
         ok: true,
         count: count ?? 0,
+        via: 'select',
         ts: new Date().toISOString(),
         message: 'Supabase mantido ativo ✅',
       },
       { status: 200 },
     )
   } catch (err: any) {
-    console.error('[PING] Erro inesperado:', err)
+    console.error('[PING] Erro inesperado:', err?.message || err)
     return NextResponse.json(
-      { ok: false, error: err?.message ?? 'Erro interno', ts: new Date().toISOString() },
+      { ok: false, error: err?.message ?? 'erro interno', ts: new Date().toISOString() },
       { status: 500 },
     )
   }
