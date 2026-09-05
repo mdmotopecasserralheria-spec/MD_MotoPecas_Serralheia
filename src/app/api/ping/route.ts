@@ -39,9 +39,16 @@ export async function GET(req: NextRequest) {
       .select('*', { count: 'exact', head: true })
 
     if (error) {
-      console.error('[PING] Supabase query error:', error.message)
+      console.error('[PING] Supabase query error:', JSON.stringify(error, null, 2))
       return NextResponse.json(
-        { ok: false, error: error.message, ts: new Date().toISOString() },
+        {
+          ok: false,
+          error: error.message || 'erro desconhecido no Supabase',
+          code: (error as any)?.code ?? null,
+          details: (error as any)?.details ?? null,
+          hint: (error as any)?.hint ?? null,
+          ts: new Date().toISOString(),
+        },
         { status: 500 },
       )
     }
